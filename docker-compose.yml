@@ -3,14 +3,14 @@ services:
     build:
       context: .
       args:
-        - VITE_CONVEX_URL=http://${HOST_IP:-127.0.0.1}:${PORT:-3003}
-        - VITE_CONVEX_DASHBOARD_URL=http://${HOST_IP:-127.0.0.1}:${DASHBOARD_PORT:-3002}
+        - VITE_CONVEX_URL=http://${HOST_IP:-192.168.1.5}:${PORT:-3003}
+        - VITE_CONVEX_DASHBOARD_URL=http://${HOST_IP:-192.168.1.5}:${DASHBOARD_PORT:-3002}
     restart: always
     ports:
       - "5173:80"
     environment:
-      - VITE_CONVEX_URL=http://${HOST_IP:-127.0.0.1}:${PORT:-3003}
-      - VITE_CONVEX_DASHBOARD_URL=http://${HOST_IP:-127.0.0.1}:${DASHBOARD_PORT:-3002}
+      - VITE_CONVEX_URL=http://${HOST_IP:-192.168.1.5}:${PORT:-3003}
+      - VITE_CONVEX_DASHBOARD_URL=http://${HOST_IP:-192.168.1.5}:${DASHBOARD_PORT:-3002}
 
   ourfiles-backend:
     build:
@@ -29,8 +29,8 @@ services:
       - INSTANCE_SECRET=${INSTANCE_SECRET:-}
       - CONVEX_RELEASE_VERSION_DEV=${CONVEX_RELEASE_VERSION_DEV:-}
       - ACTIONS_USER_TIMEOUT_SECS=${ACTIONS_USER_TIMEOUT_SECS:-}
-      - CONVEX_CLOUD_ORIGIN=${URL_BASE:-http://${HOST_IP:-127.0.0.1}}:${PORT:-3003}
-      - CONVEX_SITE_ORIGIN=${URL_BASE:-http://${HOST_IP:-127.0.0.1}}:${SITE_PROXY_PORT:-3004}
+      - CONVEX_CLOUD_ORIGIN=${URL_BASE:-http://${HOST_IP:-192.168.1.5}}:${PORT:-3003}
+      - CONVEX_SITE_ORIGIN=${URL_BASE:-http://${HOST_IP:-192.168.1.5}}:${SITE_PROXY_PORT:-3004}
       - DATABASE_URL=${DATABASE_URL:-}
       - DISABLE_BEACON=${DISABLE_BEACON:-}
       - REDACT_LOGS_TO_CLIENT=${REDACT_LOGS_TO_CLIENT:-false}
@@ -77,7 +77,7 @@ services:
     ports:
       - "${DASHBOARD_PORT:-3002}:6791"
     environment:
-      - NEXT_PUBLIC_DEPLOYMENT_URL=http://${HOST_IP:-127.0.0.1}:${PORT:-3003}
+      - NEXT_PUBLIC_DEPLOYMENT_URL=http://${HOST_IP:-192.168.1.5}:${PORT:-3003}
     depends_on:
       - ourfiles-backend
 
