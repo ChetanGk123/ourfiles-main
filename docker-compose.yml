@@ -12,7 +12,7 @@ services:
     environment:
       - VITE_CONVEX_URL=http://${HOST_IP:-192.168.1.5}:${PORT:-3003}
       - VITE_CONVEX_DASHBOARD_URL=http://${HOST_IP:-192.168.1.5}:${DASHBOARD_PORT:-3002}
-      - CONVEX_SELF_HOSTED_ADMIN_KEY='convex-self-hosted|01bd47a4f9aeb92f518de66419bd5eb52497c3be2139bd2436ce61aa34804324895a00306e' # e.g. 'convex-self-hosted|01ff18697486491daecb1b30e535a97fedeb8879e76b467f0ccec385ba6c350676dd11e305720825c331ea1042174378a0'
+      - CONVEX_SELF_HOSTED_ADMIN_KEY='convex-self-hosted|01bd47a4f9aeb92f518de66419bd5eb52497c3be2139bd2436ce61aa34804324895a00306e'
 
 
   ourfiles-backend:
