@@ -1,0 +1,86 @@
+services:
+  ourfiles-frontend:
+    build:
+      context: .
+      args:
+        - VITE_CONVEX_URL=http://${HOST_IP:-127.0.0.1}:${PORT:-3003}
+        - VITE_CONVEX_DASHBOARD_URL=http://${HOST_IP:-127.0.0.1}:${DASHBOARD_PORT:-3002}
+    restart: always
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_CONVEX_URL=http://${HOST_IP:-127.0.0.1}:${PORT:-3003}
+      - VITE_CONVEX_DASHBOARD_URL=http://${HOST_IP:-127.0.0.1}:${DASHBOARD_PORT:-3002}
+
+  ourfiles-backend:
+    build:
+      context: .
+      dockerfile: ./self-hosted/Dockerfile
+    restart: always
+    ports:
+      - "${PORT:-3003}:3210"
+      - "${SITE_PROXY_PORT:-3004}:3211"
+    volumes:
+      - data:/convex/data
+      - ./convex:/convex/convex
+
+    environment:
+      - INSTANCE_NAME=${INSTANCE_NAME:-}
+      - INSTANCE_SECRET=${INSTANCE_SECRET:-}
+      - CONVEX_RELEASE_VERSION_DEV=${CONVEX_RELEASE_VERSION_DEV:-}
+      - ACTIONS_USER_TIMEOUT_SECS=${ACTIONS_USER_TIMEOUT_SECS:-}
+      - CONVEX_CLOUD_ORIGIN=${URL_BASE:-http://${HOST_IP:-127.0.0.1}}:${PORT:-3003}
+      - CONVEX_SITE_ORIGIN=${URL_BASE:-http://${HOST_IP:-127.0.0.1}}:${SITE_PROXY_PORT:-3004}
+      - DATABASE_URL=${DATABASE_URL:-}
+      - DISABLE_BEACON=${DISABLE_BEACON:-}
+      - REDACT_LOGS_TO_CLIENT=${REDACT_LOGS_TO_CLIENT:-false}
+    command: >
+      sh -lc '
+        set -e
+        GEN="./generate_admin_key.sh"
+        # Fallbacks if script isn’t in CWD (depends on your Dockerfile)
+        [ -x "$GEN" ] || GEN="/generate_admin_key.sh"
+        [ -x "$GEN" ] || GEN="/app/generate_admin_key.sh"
+        [ -x "$GEN" ] || GEN="/usr/local/bin/generate_admin_key.sh"
+        # Normalize CRLF just in case
+        [ -f "$GEN" ] && sed -i "s/\r$//" "$GEN" || true
+        chmod +x "$GEN" 2>/dev/null || true
+
+        # Generate only if not present
+        if [ ! -s /convex/data/admin_key ]; then
+          echo "[ourfiles-backend] Generating admin key…"
+          "$GEN" | tee /convex/data/admin_key.out || true
+        fi
+
+        echo "==================== ADMIN KEY ===================="
+        # Try well-known locations
+        if [ -s /convex/data/admin_key ]; then
+          cat /convex/data/admin_key
+        elif [ -s /convex/data/admin_key.out ]; then
+          cat /convex/data/admin_key.out
+        else
+          # Some generator scripts print the key to stdout only; try to parse last run
+          echo "(No /convex/data/admin_key file found. Check above logs for the printed key.)"
+        fi
+        echo "==================================================="
+
+        exec convex dev
+      '
+    healthcheck:
+      test: curl -f http://localhost:3210/version
+      interval: 5s
+      start_period: 5s
+
+  ourfiles-dashboard:
+    image: ghcr.io/get-convex/convex-dashboard:33cef775a8a6228cbacee4a09ac2c4073d62ed13
+    restart: always
+    ports:
+      - "${DASHBOARD_PORT:-3002}:6791"
+    environment:
+      - NEXT_PUBLIC_DEPLOYMENT_URL=http://${HOST_IP:-127.0.0.1}:${PORT:-3003}
+    depends_on:
+      ourfiles-backend:
+        condition: service_healthy
+
+volumes:
+  data:
